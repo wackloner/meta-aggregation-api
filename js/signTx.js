@@ -21,18 +21,38 @@ async function signTransactionWithMnemonic() {
         console.log(`DexGuru API Auth Token: ${authToken}`);
 
         // Polygon Mainnet
-        let chainId = '137';
-        // USDC
-        let buyTokenAddress = '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063';
+        const chainId = '137';
+        // DAI
+        const buyTokenAddress = '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063';
         // MATIC
-        let sellTokenAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+        const sellTokenAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
         // 10 MATIC
-        let sellAmount = '10000000000000000000';
-        let providerName = 'one_inch';
-        let takerAddress = wallet.address;
-        let slippagePercent = '0.005';
+        const sellAmount = '10_000_000_000_000_000_000';
+        const takerAddress = wallet.address;
+        const slippagePercent = '0.005';
+        const feePercent = '0.01';
+        const feeRecipient = wallet.address;
 
-        const response = await axios.get(
+        console.log(`Buying ${buyTokenAddress} with ${sellAmount} ${sellTokenAddress} on ${chainId} chain`)
+
+        const bestPriceResponse = await axios.get(
+            `${apiUrl}/v1/market/${chainId}/price`,
+            {
+                params: {
+                    'buyToken': buyTokenAddress,
+                    'sellToken': sellTokenAddress,
+                    'sellAmount': sellAmount,
+                    'takerAddress': takerAddress,
+                    'slippagePercentage': slippagePercent,
+                    'buyTokenPercentageFee': feePercent,
+                    'feeRecipient': feeRecipient
+                }
+            },
+        );
+        console.log(`DexGuru API Best Price: ${JSON.stringify(bestPriceResponse.data, null, 2)}`);
+
+        const providerName = bestPriceResponse.data.provider;
+        const quoteResponse = await axios.get(
             `${apiUrl}/v1/market/${chainId}/quote`,
             {
                 headers: {
@@ -44,12 +64,14 @@ async function signTransactionWithMnemonic() {
                     'sellAmount': sellAmount,
                     'provider': providerName,
                     'takerAddress': takerAddress,
-                    'slippagePercentage': slippagePercent
+                    'slippagePercentage': slippagePercent,
+                    'buyTokenPercentageFee': feePercent,
+                    'feeRecipient': feeRecipient
                 }
             },
         );
 
-        const txData = response.data;
+        const txData = quoteResponse.data;
         console.log(`DexGuru API Unsigned Transaction: ${JSON.stringify(txData, null, 2)}`);
 
         const tx = {

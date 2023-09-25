@@ -18,6 +18,7 @@ from meta_aggregation_api.providers.paraswap_v5 import ParaSwapProviderV5
 from meta_aggregation_api.providers.zerox_v1 import ZeroXProviderV1
 from meta_aggregation_api.rest_api import dependencies
 from meta_aggregation_api.rest_api.middlewares import RouteLoggerMiddleware
+from meta_aggregation_api.rest_api.routes.auth import auth_routes
 from meta_aggregation_api.rest_api.routes.gas import gas_routes
 from meta_aggregation_api.rest_api.routes.info import info_route
 from meta_aggregation_api.rest_api.routes.limit_orders import limit_orders
@@ -222,6 +223,7 @@ def register_elastic_apm(app: FastAPI, apm_client: ApmClient):
 
 
 def register_route(app: FastAPI):
+    app.include_router(auth_routes, prefix="/v1/auth", tags=["Auth"])
     app.include_router(v1_rpc, prefix="/v1", tags=["RPC Requests"])
     app.include_router(gas_routes, prefix="/v1/gas", tags=["Gas"])
     app.include_router(info_route, prefix="/v1/info", tags=["Info"])
